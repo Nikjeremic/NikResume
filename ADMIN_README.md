@@ -56,3 +56,4 @@ Podaci se čuvaju u MongoDB bazi:
 
 Admin panel je skriven i nije vidljiv u normalnoj navigaciji. Pristupa mu se samo preko `#admin` rute.
 
+
