@@ -185,98 +185,119 @@ function AboutPage() {
   )
 }
 
+const stripHtmlTags = (text: string) => text.replace(/<[^>]*>/g, '')
+
 function ResumePage() {
+  const { content, loading } = useContent('resume')
+
+  const renderWorkExperience = (items: typeof content) => {
+    const workItems = items.filter((item) => item.section.startsWith('Work Experience'))
+    if (workItems.length === 0) return null
+
+    return (
+      <div className="resume-section">
+        <h2 className="section-title">Work Experience</h2>
+        <div className="resume-items-grid">
+          {workItems.map((item) => {
+            const sanitizedContent = stripHtmlTags(item.content)
+            const lines = sanitizedContent.split('\n').filter((line) => line.trim())
+            const title = lines[0] || ''
+            const period = lines[1] || ''
+            const companyMatch = title.match(/at (.+)$/i) || title.match(/at (.+?),/i)
+            const company = companyMatch ? companyMatch[1] : title.includes('at ') ? title.split(' at ')[1] : ''
+            const cleanTitle = title.replace(/\s*(at|@).*$/i, '').trim()
+            
+            const responsibilities = lines.slice(2).filter((line) => {
+              const trimmed = line.trim()
+              return trimmed && (trimmed.startsWith('-') || trimmed.startsWith('•') || trimmed.startsWith('Responsibilities:'))
+            })
+
+            return (
+              <div key={item._id || item.section} className="resume-item">
+                <h3 className="resume-item-title">{cleanTitle}</h3>
+                {company && <p className="resume-item-company">{company}</p>}
+                {period && <p className="resume-item-period">{period}</p>}
+                {responsibilities.length > 0 && (
+                  <ul className="resume-item-list">
+                    {responsibilities.map((resp, idx) => {
+                      const cleanResp = resp.replace(/^[-•]\s*/, '').replace(/^Responsibilities:\s*/, '').trim()
+                      return cleanResp ? <li key={idx}>{cleanResp}</li> : null
+                    })}
+                  </ul>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+
+  const renderEducation = (items: typeof content) => {
+    const education = items.find((item) => item.section === 'Education')
+    if (!education) return null
+
+    const lines = stripHtmlTags(education.content).split('\n').filter((line) => line.trim())
+    return (
+      <div className="resume-section">
+        <h2 className="section-title">Education</h2>
+        <div className="resume-item">
+          {lines[0] && <h3 className="resume-item-title">{lines[0]}</h3>}
+          {lines[1] && <p className="resume-item-company">{lines[1]}</p>}
+          {lines[2] && <p className="resume-item-period">{lines[2]}</p>}
+        </div>
+      </div>
+    )
+  }
+
+  const renderCourses = (items: typeof content) => {
+    const courses = items.find((item) => item.section === 'Courses and Certifications')
+    if (!courses) return null
+
+    const courseLines = stripHtmlTags(courses.content).split('\n').filter((line) => line.trim())
+    return (
+      <div className="resume-section">
+        <h2 className="section-title">Courses and Certifications</h2>
+        <div className="resume-item">
+          <ul className="resume-item-list">
+            {courseLines.map((course, idx) => (
+              <li key={idx}>{course.trim()}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    )
+  }
+
+  if (loading) {
+    return (
+      <main className="content-page">
+        <div className="content-background content-bg-resume" />
+        <div className="page-container">
+          <h1 className="page-title">Resume</h1>
+          <div className="page-content">
+            <p className="page-text">Loading...</p>
+          </div>
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main className="content-page">
       <div className="content-background content-bg-resume" />
       <div className="page-container">
         <h1 className="page-title">Resume</h1>
         <div className="page-content">
-          <div className="resume-section">
-            <h2 className="section-title">Work Experience</h2>
-            <div className="resume-items-grid">
-              <div className="resume-item">
-                <h3 className="resume-item-title">System Administrator</h3>
-                <p className="resume-item-company">Thermowool D.O.O. Adaševci</p>
-                <p className="resume-item-period">October 2024 - Present</p>
-                <ul className="resume-item-list">
-                  <li>Managing Windows Server infrastructure</li>
-                  <li>Active Directory and Group Policies management</li>
-                  <li>User accounts administration</li>
-                  <li>Server hardware maintenance</li>
-                  <li>Synology NAS management</li>
-                  <li>Cisco network devices configuration</li>
-                  <li>IT policies implementation</li>
-                  <li>Employee onboarding/offboarding</li>
-                  <li>First-line ERP/help desk support</li>
-                </ul>
-              </div>
-              <div className="resume-item">
-                <h3 className="resume-item-title">Scrum Master - Internship</h3>
-                <p className="resume-item-company">Zummit Infolabs, Bengaluru, India</p>
-                <p className="resume-item-period">April 2024 - July 2024</p>
-                <ul className="resume-item-list">
-                  <li>Facilitated Agile processes and ceremonies</li>
-                  <li>Led UI/UX team collaboration</li>
-                  <li>Fostered team collaboration and communication</li>
-                  <li>Ensured high-quality software delivery</li>
-                </ul>
-              </div>
-              <div className="resume-item">
-                <h3 className="resume-item-title">System Administrator</h3>
-                <p className="resume-item-company">Sports Association, Sremska Mitrovica</p>
-                <p className="resume-item-period">September 2022 - September 2024</p>
-                <ul className="resume-item-list">
-                  <li>Managed computer systems and network infrastructure</li>
-                  <li>Provided technical support to users</li>
-                  <li>Resolved hardware and software issues</li>
-                  <li>Configured and maintained hardware</li>
-                  <li>Implemented backup solutions</li>
-                </ul>
-              </div>
-              <div className="resume-item">
-                <h3 className="resume-item-title">Freelance Web Developer</h3>
-                <p className="resume-item-company">Self-employed</p>
-                <p className="resume-item-period">March 2021 - February 2024</p>
-                <ul className="resume-item-list">
-                  <li>Designed and developed responsive websites</li>
-                  <li>Used WordPress, WooCommerce, and Elementor</li>
-                  <li>Delivered optimized web solutions</li>
-                  <li>Provided ongoing support and maintenance</li>
-                </ul>
-              </div>
-              <div className="resume-item">
-                <h3 className="resume-item-title">Frontend Developer - Internship</h3>
-                <p className="resume-item-company">SirmiumERP, Sremska Mitrovica</p>
-                <p className="resume-item-period">August 2017 - October 2017</p>
-                <ul className="resume-item-list">
-                  <li>Developed responsive user interfaces</li>
-                  <li>Ensured seamless front-end back-end integration</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-          <div className="resume-section">
-            <h2 className="section-title">Education</h2>
-            <div className="resume-item">
-              <h3 className="resume-item-title">Bachelor's Degree in Business Informatics</h3>
-              <p className="resume-item-company">Higher School of Professional Studies in Business "Prof. Dr. Radomir Bojković" Belgrade</p>
-              <p className="resume-item-period">2020 - 2023</p>
-            </div>
-          </div>
-          <div className="resume-section">
-            <h2 className="section-title">Courses and Certifications</h2>
-            <div className="resume-item">
-              <ul className="resume-item-list">
-                <li>Active Directory on Windows Server, Udemy (Kevin Brown) - March 2025 - May 2025</li>
-                <li>Windows Server 2022 Administration, Udemy (Kevin Brown) - September 2024 - December 2024</li>
-                <li>Network Academy with Cisco - October 2024 - November 2024</li>
-                <li>Project Management, Google - January 2024 - May 2024</li>
-                <li>Scrum Master, LearnQuest - January 2024 - February 2024</li>
-                <li>FreecodeCamp - January 2018 - August 2019</li>
-              </ul>
-            </div>
-          </div>
+          {content.length > 0 ? (
+            <>
+              {renderWorkExperience(content)}
+              {renderEducation(content)}
+              {renderCourses(content)}
+            </>
+          ) : (
+            <p className="page-text">No content available.</p>
+          )}
         </div>
       </div>
     </main>
